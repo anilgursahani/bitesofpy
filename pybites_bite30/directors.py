@@ -1,4 +1,5 @@
 import csv
+from csv import DictReader
 from collections import defaultdict, namedtuple
 import os
 from urllib.request import urlretrieve
@@ -29,38 +30,36 @@ def get_movies_by_director():
         moviesByDirector = {}
         
         for line in dictData:
-            Movie = namedtuple('Movie', 'title year score')
+          
         
             director = line['director_name']
-            Movie.title = line['movie_title']
-            Movie.year = line['title_year']
-            Movie.score = line['imdb_score']
+            movieTitle = line['movie_title']
+            movieYear = line['title_year']
             
-            movieYear = Movie.year
+            movieScore = line['imdb_score']
+            
+            
             if movieYear.isdigit():
-                movieYear = int(movieYear)
-                if movieYear < MIN_YEAR:
-                    continue
+                yearOfMovie = int(movieYear)
             else:
-                continue
-            
-        
-            if director in moviesByDirector.keys():
-           
-                listOfDirectorMovies = moviesByDirector[director]
-                listOfDirectorMovies.append(Movie)
-            
-            
-            
-            else:
-            
-                listOfDirectorMovies = []
-                listOfDirectorMovies.append(Movie)
-                moviesByDirector[director] = listOfDirectorMovies
+                yearOfMovie = 0
+               
                 
+            theMovie = Movie(movieTitle, movieYear, movieScore)
             
-      
-    
+            
+            
+            if yearOfMovie  > MIN_YEAR:
+                if director in moviesByDirector.keys():
+                   
+                    listOfDirectorMovies = moviesByDirector[director]
+                    listOfDirectorMovies.append(theMovie)
+                else:
+                    listOfDirectorMovies = []
+                    listOfDirectorMovies.append(theMovie)
+                    moviesByDirector[director] = listOfDirectorMovies
+                    
+   
     return moviesByDirector
         
    
@@ -79,6 +78,7 @@ def calc_mean_score(movies):
     return(round(avg,1))
     pass
 
+AVG_SCORE = namedtuple('AVG_SCORE', ['director', 'average_score'])
 
 def get_average_scores(directors):
     """Iterate through the directors dict (returned by get_movies_by_director),
@@ -87,21 +87,22 @@ def get_average_scores(directors):
        with >= MIN_MOVIES"""
        
     directorList = []   
+   
     for director in directors.keys():
        
         movieList = directors[director]
+        directorAndScore = []
         numMovies = len(movieList)
         if numMovies >= MIN_MOVIES:
             avgScore = calc_mean_score(movieList)
-            AVG_SCORE = namedtuple('AVG_SCORE', ['director', 'average_score'])
-            AVG_SCORE.director = director
-            AVG_SCORE.average_score = avgScore
-            directorList.append(AVG_SCORE)
+            theAverageScore = AVG_SCORE(director, avgScore)
+            
+            
+            directorList.append(tuple(theAverageScore))
             
         
     DoSortDirectorList(directorList)
-        
-        
+    return directorList
     
     pass
 
@@ -116,21 +117,12 @@ def DoSortDirectorList(theList):
         for j in range(posToSetIdx+1,numItems):
             posToSetItem = theList[posToSetIdx]
             jItem = theList[j]
-            posToSetAvgScore = posToSetItem.average_score
-            jItemAvgScore = jItem.average_score
+            posToSetAvgScore = posToSetItem[1]
+            jItemAvgScore = jItem[1]
             if jItemAvgScore > posToSetAvgScore:
                 temp = theList[posToSetIdx]
                 theList[posToSetIdx] = theList[j]
                 theList[j] = temp
             
-            
-    
-    
-def main():
-    directors = get_movies_by_director()
-    get_average_scores(directors)
-    
-if __name__ == '__main__':
-    main()
-    
+   
     
